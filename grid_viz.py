@@ -24,7 +24,7 @@ class RobotModel:
                 f"wheelbase={self.wheelbase}, max_steer_rad={self.max_steer_rad:.3f}, "
                 f"max_curvature={self.max_curvature:.4f})")
 
-def draw_robot(state,model):
+def compute_robot_polygon(state,model):
     L = model.length
     W = model.width
 
@@ -46,10 +46,16 @@ def draw_robot(state,model):
 
 rows, cols = 20, 20
 grid = np.random.choice([0, 1], size=(rows, cols), p=[0.75, 0.25])
+free_indices = np.argwhere(grid == 0)
+if free_indices.size > 0:
+    selected = free_indices[np.random.randint(len(free_indices))]
+    i, j = selected
+    x_coord = j + 0.5
+    y_coord = i + 0.5
 
-state = RobotState(x=10, y=10, yaw=45, kappa=0.1)
+state = RobotState(x=x_coord, y=y_coord, yaw=45, kappa=0.1)
 model = RobotModel(length=0.625, width=0.3, wheelbase=0.425)
-robot_body = draw_robot(state, model)
+robot_body = compute_robot_polygon(state, model)
 
 robot_place = Polygon(robot_body, closed=True, color='blue', facecolor="none",linewidth=2)
 
