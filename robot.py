@@ -49,10 +49,68 @@ class RobotModel:
         self.length = float(length)  # Length of the robot in meters
         self.width = float(width)    # Width of the robot in meters
         self.wheelbase = float(wheelbase)  # Wheelbase in meters
-        self.max_steer_rad = math.radians(self.max_steer_deg)  # Max steering angle in radians
+        self.max_steer_rad = math.radians(max_steer_deg)  # Max steering angle in radians
         self.max_curvature = math.tan(self.max_steer_rad) / self.wheelbase  # Max curvature
     
     def __repr__(self):
         return (f"RobotModel(length={self.length}, width={self.width}, "
                 f"wheelbase={self.wheelbase}, max_steer_rad={self.max_steer_rad:.3f}, "
                 f"max_curvature={self.max_curvature:.4f})")
+    
+def compute_robot_polygon(state: RobotState, model: RobotModel):
+    # Returns 4 corners of the robot polygon in world coordinates
+    L, W = model.length, model.width
+    # Define robot body corners in local frame
+    body_local = np.array([
+        [+L/2, +W/2], # front-left
+        [+L/2, -W/2], # front-right
+        [-L/2, -W/2], # rear-right
+        [-L/2, +W/2], # rear-left
+    ])
+    # Rotation matrix from local to world frame
+    theta = math.radians(state.yaw)
+    # 2D rotation matrix
+    R = np.array([[math.cos(theta), -math.sin(theta)],
+                  [math.sin(theta),  math.cos(theta)]])
+    # Transform body corners to world frame
+    body_world = body_local @ R.T
+    # Translate to world position
+    body_world[:,0] += state.x
+    body_world[:,1] += state.y
+    # Return the polygon corners in world coordinates
+    return body_world
+
+# Function to check collision along an arc from start to end state
+def is_collision_along_arc(start: RobotState, end: RobotState, model: RobotModel, grid):
+    # Sample 6 intermediate poses along the arc and check for collisions
+    num_samples = 6
+    for i in np.linspace(0.1,0.9,num_samples):
+        # Linearly interpolate kappa (conservative)
+        kappa_interp = start.kappa + i * (end.kappa - start.kappa)
+        ds_interp = i * 0.5 # assuming MOTION_STEP = 0.5
+        intermediate = start.update(ds_interp, kappa_interp)
+        if _is_collision_single(intermediate,model,grid):
+            return True
+    return False
+
+# Helper function to check collision at a single robot state
+def _is_collision_single(state: RobotState, model: RobotModel, grid):
+    # Check if robot at given state collides with occupied cells in grid
+    poly = compute_robot_polygon(state, model)
+    # Axis-aligned bounding box of the robot polygon
+    min_x, max_x = poly[:,0].min(), poly[:,0].max()
+    min_y, max_y = poly[:,1].min(), poly[:,1].max()
+
+    # Check grid cells overlapping with AABB
+    for i in range(int(math.floor(min_y)), int(math.ceil(max_y))):
+        for j in range(int(math.floor(min_x)), int(math.ceil(max_x))):
+            # Check grid bounds
+            if not (0 <= i < grid.shape[0] and 0 <= j < grid.shape[1]):
+                # Out of bounds implies collision
+                return True
+            if grid[i,j] == 1: # occupied cell
+                # Quick Axis Aligned Bounding Box check
+                if (j <= max_x and j+1 >= min_x and
+                    i <= max_y and i+1 >= min_y):
+                    return True # Collision detected
+    return False
