@@ -4,7 +4,7 @@ import time
 import numpy as np
 from collections import defaultdict
 from robot import RobotModel, RobotState, compute_robot_polygon, is_collision_along_arc
-from utils import precompute_holonomic, precompute_nonholonomic
+from utils import precompute_holonomic, precompute_nonholonomic, get_state_key
 
 # Configuration parameters
 GRID_RESOLUTION = 1.0  # meters per cell
@@ -22,7 +22,7 @@ class HybridAStar:
         self.goal_state = goal_state
 
         self.dist_2d = precompute_holonomic(goal_state,grid)
-        self.dist_rs = precompute_nonholonomic(goal_state)
+        self.dist_nh = precompute_nonholonomic(goal_state)
 
                 
         self.open_set = []
@@ -30,4 +30,18 @@ class HybridAStar:
         self.came_from = {}
         self.g_score = {}
         self.explored_nodes = []
-        
+
+    # Combine holonomic and non-holonomic heuristics
+    def heuristic(self,state):
+        # Holonomic heuristic with obstacles
+        ix, iy = int(state.x), int(state.y)
+        # Bounds check
+        if not (0 <= iy < self.dist_2d.shape[0] and 0 <= ix < self.dist_2d.shape[1]):
+            # Out of bounds
+            return float('inf')
+        h1 = self.dist_2d[iy, ix]
+        # Non-holonomic heuristic with obstacles
+        key = get_state_key(state, RESOLUTIONS)
+        h2 = self.dist_nh.get(key, 100.0)
+
+        return max(h1, h2)

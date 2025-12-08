@@ -60,3 +60,15 @@ def precompute_nonholonomic(goal_state):
 
         return dist + 0.5 * yaw_err + kappa_penalty    
     return nh_cost
+
+# Generate a unique key for a state based on discretization
+def get_state_key(state, res=RESOLUTIONS):
+    # Extract resolution values
+    dx, dy, dyaw, dkappa = res
+    # Compute discrete indices
+    return (
+        int(state.x // dx),
+        int(state.y // dy),
+        int(state.yaw // dyaw),
+        int(state.kappa // dkappa)
+    )
