@@ -65,4 +65,4 @@ class HybridAStar:
         dyaw = min(abs(state.yaw - self.goal.yaw) % 360, 360 - abs(state.yaw - self.goal.yaw) % 360)
 
         # Return True if within thresholds
-        return dx < 0.8 and dy < 0.8 and dyaw < 10.0
+        return dx <= 0.8 and dy <= 0.8 and dyaw <= 10.0
