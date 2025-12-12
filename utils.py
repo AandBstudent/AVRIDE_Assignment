@@ -42,7 +42,7 @@ def precompute_holonomic(goal_state, grid):
                 if nd < dist[ny, nx]:
                     # Update distance and push to priority queue
                     dist[ny, nx] = nd
-                    heapq.heappush(pq, (nd, nx, ny))
+                    heapq.heappush(pq, (nd, ny, nx))
     # Return the computed distance field
     return dist
 

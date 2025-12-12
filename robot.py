@@ -40,12 +40,18 @@ class RobotState:
         # Verify that other is RobotState and compare hashes
         return isinstance(other, RobotState) and hash(self) == hash(other)
     
+    # Less than for heap comparisons
+    def __lt__(self, other):
+        if not isinstance(other, RobotState):
+            return NotImplemented
+        return (self.x, self.y, self.yaw, self.kappa) < (other.x, other.y, other.yaw, other.kappa)
+    
     # String representation of the robot state
     def __repr__(self):
         return f"RobotState(x={self.x:.2f}, y={self.y:.2f}, yaw={self.yaw:.1f}, kappa={self.kappa:.3f})"
 
 class RobotModel:
-    def __init__(self, length=0.625, width=0.3, wheelbase=0.425, max_steer_deg=35.0):
+    def __init__(self, length=0.3125, width=0.15, wheelbase=0.2125, max_steer_deg=35.0):
         self.length = float(length)  # Length of the robot in meters
         self.width = float(width)    # Width of the robot in meters
         self.wheelbase = float(wheelbase)  # Wheelbase in meters
