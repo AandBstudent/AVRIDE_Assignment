@@ -55,61 +55,96 @@ class HybridAStar:
 
         return max(h1, h2)
     
-    def path_search(self,max_nodes=300000):
-        start_key = get_state_key(self.start, RESOLUTIONS)
-
+    # Perform the path search using A* algorithm
+    def path_search(self,max_nodes=350000):
+        
+        # Initialize the search
+        # Push the start state onto the open set
         heapq.heappush(self.open_set, (0 + self.path_maker(self.start), 0, self.start))
+        # Initialize the start state's g-score and parent
         self.g_score[self.start] = 0.0
         self.came_from[self.start] = None
 
         nodes_expanded = 0
 
+        # Main search loop, until the goal is reached or the open set is exhausted
         while self.open_set and nodes_expanded < max_nodes:
+            # Pop the state with the lowest f-score from the open set
             _, current_g, current = heapq.heappop(self.open_set)
             nodes_expanded += 1
+            # Print progress every 1000 nodes
             if nodes_expanded % 1000 == 0:
                 print(f"  Expanded {nodes_expanded} nodes...")
+            # Mark the current state as explored
             self.explored_nodes.append(current)
 
+            # Check if the goal is reached
             if self.goal_reached(current):
                 print(f"Goal reached after {nodes_expanded} nodes expanded.")
+                # If the goal is reached, reconstruct and return the path
                 return self.path_reconstruct(current), self.explored_nodes
             
+            # Skip if the current state is already in the closed set 
+            # and its g-score is not better
             key = get_state_key(current, RESOLUTIONS)
             if key in self.closed and current_g >= self.closed[key]:
                 continue
+            # Add the current state to the closed set
             self.closed[key] = current_g
 
+            # Generate and evaluate successor states
+            # Define possible steering angles in degrees
+            # Note: The angles are chosen to be symmetric around 0 degrees
+            # and cover a reasonable range for steering
             steering_angles_deg = [-30, -24, -18, -12, -6, 0, 6, 12, 18, 24, 30]
 
+            # Generate successors for forward and reverse directions
+            # Note: The direction is 1.0 for forward and -1.0 for reverse
+            # Note: The reverse penalty is applied to the cost of moving in reverse
+            # Note: A forward bias is added to the reverse penalty to encourage forward motion
             for direction in [1.0, -1.0]:
+                # Apply reverse penalty if moving in reverse
                 rev_penalty = REVERSE_PENALTY if direction < 0 else 1.0
+                # Add forward bias to reverse penalty to encourage forward motion
                 forward_bias = 0.0 if direction > 0 else 0.5
                 rev_penalty += forward_bias
 
+                # Generate successors for each steering angle
                 for steer in steering_angles_deg:
+                    # Compute kappa from steering angle
                     kappa = 0.0 if abs(steer) < 1e-3 else math.tan(math.radians(steer)) / self.model.wheelbase
+                    # Generate successor state
                     successor = current.update(MOTION_STEP * direction, kappa)
                     
+                    # Skip if successor state is in collision
                     if is_collision_along_arc(current, successor, self.model, self.grid):
                         continue
-                        
+                    # Compute cost to reach successor state
                     g = current_g + MOTION_STEP * rev_penalty + self.obstacle_avoidance(successor)
                     
+                    # Update the open set with the new successor state 
+                    # if it has a better g-score
                     if g < self.g_score.get(successor, float('inf')):
+                        # Update g-score and push to open set
                         self.g_score[successor] = g
+                        # Compute f-score and push to open set
                         f = g + self.path_maker(successor)
                         heapq.heappush(self.open_set, (f, g, successor))
+                        # Update parent of successor state
                         self.came_from[successor] = current
         print("Search Failed")
+        # If the goal is not reached, return None and the explored nodes
         return None, self.explored_nodes
-            
+    
+    # Reconstruct the path from the goal to the start
     def path_reconstruct(self,final):
         path = []
         current = final
+        # Trace back through the parent pointers
         while current is not None:
             path.append(current)
             current = self.came_from.get(current)
+        # Reverse the path to get from start to goal
         return path[::-1]
     
     # Cost to traverse the path considering obstacles
@@ -132,4 +167,4 @@ class HybridAStar:
         dyaw = min(abs(state.yaw - self.goal.yaw) % 360, 360 - abs(state.yaw - self.goal.yaw) % 360)
 
         # Return True if within thresholds
-        return dx <= 0.2 and dy <= 0.2 and dyaw <= 30.0
+        return dx <= 0.15 and dy <= 0.15 and dyaw <= 180.0
