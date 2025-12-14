@@ -4,10 +4,17 @@ from planner import HybridAStar
 from viz import visualize_and_mcap
 import time
 
-def load_grid(rows=50, cols=50):
+def load_grid(rows=5, cols=5):
     # grid = np.zeros((rows, cols), dtype=np.uint8)
     # Add obstacles
-    grid = np.random.choice([0, 1], size=(rows, cols), p=[0.75, 0.25])
+    # Test path finding around obstacles
+    grid = np.zeros((rows, cols), dtype=int)
+
+    # Create more obstacles and place them randomly
+    for _ in range(5):
+        x, y = np.random.randint(0, 5, 2)
+        grid[x, y] = 1  # obstacle
+
     # Find a free cell to place the robot
     free_indices = np.argwhere(grid == 0)
     if free_indices.size > 0:
@@ -17,27 +24,37 @@ def load_grid(rows=50, cols=50):
         x_coord = j + 0.5
         y_coord = i + 0.5
 
-    # Boundary walls
-    grid[:1, :] = 1   # top wall
-    grid[-1:, :] = 1  # bottom wall
-    grid[:, :1] = 1   # left wall
-    grid[:, -1:] = 1  # right wall
+    # Find a free cell to place the goal, not the same as the robot's cell
+    free_indices = np.argwhere(grid == 0)
+    free_indices = free_indices[~((free_indices[:, 0] == i) & (free_indices[:, 1] == j))]
+    selected = free_indices[np.random.randint(len(free_indices))]
+    i, j = selected
+    x_coord_goal = j + 0.5
+    y_coord_goal = i + 0.5    
 
-    return grid, x_coord, y_coord
+    return grid, x_coord, y_coord, x_coord_goal, y_coord_goal
 
 def main():
-    grid, x_coord, y_coord = load_grid()
-
-    # Test explored nodes
-    explored = [RobotState(i, j, 0, 0) for i in range(0, 20, 2) for j in range(0, 20, 2)]
-
-    # Test path
-    path = [RobotState(x_coord+ i, y_coord + i, 45, 0.1) for i in range(5, 25)]
-
+    grid, x_coord, y_coord, x_coord_goal, y_coord_goal = load_grid()
     # Robot model
-    robot_model = RobotModel(length=0.85, width=0.45)
+    robot_model = RobotModel()
 
-    visualize_and_mcap(grid, path, explored, robot_model, "hybrid_astar_single_tick_main.mcap")
+    start_state = RobotState(x_coord, y_coord, 0, 0)
+    goal_state = RobotState(x_coord_goal, y_coord_goal, 0, 0)
+
+    planner = HybridAStar(grid, robot_model, start_state, goal_state)
+
+    start_time = time.time()
+    path, explored = planner.path_search()
+    end_time = time.time()
+
+    print(f"Planning finished in {end_time - start_time:.2f} seconds | Nodes explored: {len(explored)}")
+    if path:
+        print(f"Path length: {len(path)} | Path cost: {planner.g_score[path[-1]]:.2f}")
+    else:
+        print("No path found")
+
+    visualize_and_mcap(grid, path, explored, robot_model, start_state, goal_state)
 
 if __name__ == "__main__":
     main()
