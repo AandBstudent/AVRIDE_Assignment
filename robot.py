@@ -113,7 +113,7 @@ def _is_collision_single(state: RobotState, model: RobotModel, grid):
             # Check grid bounds
             if not (0 <= i < grid.shape[0] and 0 <= j < grid.shape[1]):
                 # Out of bounds implies collision
-                return True
+                continue
             if grid[i,j] == 1: # occupied cell
                 # Quick Axis Aligned Bounding Box check
                 if (j <= max_x and j+1 >= min_x and
