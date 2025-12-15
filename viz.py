@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
-import numpy as np
-import json
-import time
-from mcap.writer import Writer
+import foxglove
+from foxglove.channels import SceneUpdateChannel
+from foxglove import Context
+from foxglove.schemas import SceneUpdate, SceneEntity, CubePrimitive, TriangleListPrimitive, Pose, Vector3, Quaternion, Color, Duration, Point3
 from robot import compute_robot_polygon
 
 def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name="hybrid_astar_single_tick.mcap"):
@@ -16,7 +16,7 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
     if explored:
         ex = [s.x for s in explored]
         ey = [s.y for s in explored]
-        ax.scatter(ex, ey, c='pink', s=4, label='Explored Nodes', alpha=1.0)
+        ax.scatter(ex, ey, c='lightblue', s=4, label='Explored Nodes', alpha=1.0)
     
     # Final path and robot footprints
     if path:
@@ -39,4 +39,73 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
     plt.savefig("hybrid_astar_result_new.png", dpi=300)
     plt.show()
 
-    # https://github.com/foxglove/mcap/tree/main/python/examples/jsonschema
+    # MCAP file creation
+    # https://docs.foxglove.dev/docs/getting-started/python
+
+    with foxglove.open_mcap(file_name) as mcap:
+        scene_channel = SceneUpdateChannel("/scene", context=Context().default())
+
+        entities = []
+
+        for i, state in enumerate(explored[::10]):  # Every 10th state
+            entities.append(SceneEntity(
+                id=f"explored_{i}",
+                frame_id="map",
+                lifetime=Duration(sec=0, nsec=0),
+                cubes=[CubePrimitive(
+                    pose=Pose(
+                        position=Vector3(x=state.x, y=state.y, z=0.5),
+                        orientation=Quaternion(x=0, y=0, z=0, w=1)
+                    ),
+                    size=Vector3(x=.8, y=.8, z=0.4),
+                    color=Color(r=0.0, g=1.0, b=1.0, a=1.0)
+                )]
+            ))
+
+        # Path of robot footprints
+        if path:
+            for i, state in enumerate(path):
+                poly = compute_robot_polygon(state, robot_model).tolist()
+                points = [Point3(x=p[0], y=p[1], z=0.5) for p in poly]
+                entities.append(SceneEntity(
+                    id=f"path_robot_{i}",
+                    frame_id="map",
+                    lifetime=Duration(sec=0, nsec=0),
+                    triangles=[TriangleListPrimitive(
+                        points=points,
+                        color=Color(r=1.0, g=0.2, b=0.2, a=1.0)
+                    )]
+                ))
+        
+        # Start and goal markers
+        entities += [
+            SceneEntity(
+            id="start",
+            frame_id="map",
+            lifetime=Duration(sec=0, nsec=0),
+            cubes=[CubePrimitive(
+                pose=Pose(
+                    position=Vector3(x=start.x, y=start.y, z=0.1),
+                    orientation=Quaternion(w=1)
+                ),
+                size=Vector3(x=.3, y=.3, z=.6),
+                color=Color(r=0.0, g=1.0, b=1.0, a=1.0)
+            )]
+        ), 
+        SceneEntity(
+            id="goal",
+            frame_id="map",
+            lifetime=Duration(sec=0, nsec=0),
+            cubes=[CubePrimitive(
+                pose=Pose(
+                    position=Vector3(x=goal.x, y=goal.y, z=0.1),
+                    orientation=Quaternion(w=1)
+                ),
+                size=Vector3(x=.3, y=.3, z=.6),
+                color=Color(r=0.0, g=1.0, b=0.0, a=1.0)
+            )]
+        )]
+
+        scene = SceneUpdate(entities=entities)
+        scene_channel.log(scene)
+    print(f"MCAP file '{file_name}' created successfully.")
