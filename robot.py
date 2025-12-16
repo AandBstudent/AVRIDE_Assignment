@@ -108,8 +108,8 @@ def _is_collision_single(state: RobotState, model: RobotModel, grid):
     min_y, max_y = poly[:,1].min(), poly[:,1].max()
 
     # Check grid cells overlapping with AABB
-    for i in range(int(math.floor(min_y)), int(math.ceil(max_y))):
-        for j in range(int(math.floor(min_x)), int(math.ceil(max_x))):
+    for i in range(int(math.floor(min_y)), int(math.ceil(max_y))+1):
+        for j in range(int(math.floor(min_x)), int(math.ceil(max_x))+1):
             # Check grid bounds
             if not (0 <= i < grid.shape[0] and 0 <= j < grid.shape[1]):
                 # Out of bounds implies collision
