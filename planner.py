@@ -56,7 +56,7 @@ class HybridAStar:
         return max(h1, h2)
     
     # Perform the path search using A* algorithm
-    def path_search(self,max_nodes=350000):
+    def path_search(self,min_nodes = 100000, max_nodes=350000):
         
         # Initialize the search
         # Push the start state onto the open set
@@ -66,6 +66,9 @@ class HybridAStar:
         self.came_from[self.start] = None
 
         nodes_expanded = 0
+
+        goal_found = False
+        goal_state = None
 
         # Main search loop, until the goal is reached or the open set is exhausted
         while self.open_set and nodes_expanded < max_nodes:
@@ -81,8 +84,12 @@ class HybridAStar:
             # Check if the goal is reached
             if self.goal_reached(current):
                 print(f"Goal reached after {nodes_expanded} nodes expanded.")
-                # If the goal is reached, reconstruct and return the path
-                return self.path_reconstruct(current), self.explored_nodes
+                goal_found = True
+                goal_state = current
+                if nodes_expanded >= min_nodes:
+                    print(f"Min nodes reached, returning path of {nodes_expanded} expansion.")
+                    # If the goal is reached, reconstruct and return the path
+                    return self.path_reconstruct(goal_state), self.explored_nodes
             
             # Skip if the current state is already in the closed set 
             # and its g-score is not better
@@ -132,6 +139,10 @@ class HybridAStar:
                         heapq.heappush(self.open_set, (f, g, successor))
                         # Update parent of successor state
                         self.came_from[successor] = current
+        if goal_found:
+            print(f"Goal was found but minimum nodes not reached, returning best path found.")
+            return self.path_reconstruct(goal_state), self.explored_nodes
+        
         print("Search Failed")
         # If the goal is not reached, return None and the explored nodes
         return None, self.explored_nodes
