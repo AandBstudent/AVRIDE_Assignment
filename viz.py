@@ -57,7 +57,7 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
                         position=Vector3(x=state.x, y=state.y, z=0.5),
                         orientation=Quaternion(x=0, y=0, z=0, w=1)
                     ),
-                    size=Vector3(x=.8, y=.8, z=0.4),
+                    size=Vector3(x=.05, y=.05, z=0.09),
                     color=Color(r=0.0, g=1.0, b=1.0, a=1.0)
                 )]
             ))
@@ -65,7 +65,7 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
         # Path of robot footprints
         if path:
             for i, state in enumerate(path):
-                poly = compute_robot_polygon(state, robot_model).tolist()
+                poly = compute_robot_polygon(state, robot_model).tolist()[::-1]
                 points = [Point3(x=p[0], y=p[1], z=0.5) for p in poly]
                 entities.append(SceneEntity(
                     id=f"path_robot_{i}",
@@ -85,11 +85,11 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
             lifetime=Duration(sec=0, nsec=0),
             cubes=[CubePrimitive(
                 pose=Pose(
-                    position=Vector3(x=start.x, y=start.y, z=0.1),
+                    position=Vector3(x=start.x, y=start.y, z=1.0),
                     orientation=Quaternion(w=1)
                 ),
                 size=Vector3(x=.3, y=.3, z=.6),
-                color=Color(r=0.0, g=1.0, b=1.0, a=1.0)
+                color=Color(r=0.0, g=1.0, b=0.0, a=1.0)
             )]
         ), 
         SceneEntity(
@@ -98,11 +98,11 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
             lifetime=Duration(sec=0, nsec=0),
             cubes=[CubePrimitive(
                 pose=Pose(
-                    position=Vector3(x=goal.x, y=goal.y, z=0.1),
+                    position=Vector3(x=goal.x, y=goal.y, z=1.0),
                     orientation=Quaternion(w=1)
                 ),
                 size=Vector3(x=.3, y=.3, z=.6),
-                color=Color(r=0.0, g=1.0, b=0.0, a=1.0)
+                color=Color(r=1.0, g=0.0, b=0.0, a=1.0)
             )]
         )]
 
