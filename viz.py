@@ -66,7 +66,7 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
         if path:
             for i, state in enumerate(path):
                 poly = compute_robot_polygon(state, robot_model).tolist()[::-1]
-                points = [Point3(x=p[0], y=p[1], z=0.5) for p in poly]
+                points = [Point3(x=p[0], y=p[1], z=0.67) for p in poly]
                 entities.append(SceneEntity(
                     id=f"path_robot_{i}",
                     frame_id="map",
