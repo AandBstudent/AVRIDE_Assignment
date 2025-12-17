@@ -1,17 +1,19 @@
 import numpy as np
+import argparse
 from robot import RobotModel, RobotState
+from robot import get_goal_direction
 from planner import HybridAStar
 from viz import visualize_and_mcap
 import time
 
-def load_grid(rows=5, cols=5):
+def load_grid(rows=5, cols=5,num_obstacles=5):
     # grid = np.zeros((rows, cols), dtype=np.uint8)
     # Add obstacles
     # Test path finding around obstacles
     grid = np.zeros((rows, cols), dtype=int)
 
     # Create more obstacles and place them randomly
-    for _ in range(5):
+    for _ in range(num_obstacles):
         x, y = np.random.randint(0, 5, 2)
         grid[x, y] = 1  # obstacle
 
@@ -35,11 +37,20 @@ def load_grid(rows=5, cols=5):
     return grid, x_coord, y_coord, x_coord_goal, y_coord_goal
 
 def main():
-    grid, x_coord, y_coord, x_coord_goal, y_coord_goal = load_grid()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--rows', type=int, default=5)
+    parser.add_argument('--cols', type=int, default=5)
+    parser.add_argument('--num_obs', type=int, default=5)
+    args = parser.parse_args()
+
+    grid, x_coord, y_coord, x_coord_goal, y_coord_goal = load_grid(rows=args.rows,cols=args.cols,num_obstacles=args.num_obs)
     # Robot model
     robot_model = RobotModel()
 
-    start_state = RobotState(x_coord, y_coord, 0, 0)
+    start_angle = get_goal_direction(x_coord, y_coord, x_coord_goal, y_coord_goal)
+
+    start_state = RobotState(x_coord, y_coord, start_angle, 0)
     goal_state = RobotState(x_coord_goal, y_coord_goal, 0, 0)
 
     planner = HybridAStar(grid, robot_model, start_state, goal_state)
