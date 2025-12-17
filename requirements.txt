@@ -1,0 +1,14 @@
+# Core numerical + planning dependencies
+numpy>=1.24
+scipy>=1.10
+
+# Visualization (PNG output)
+matplotlib>=3.7
+
+# Optional speedups (imported in robot.py; not required unless you enable JIT paths)
+numba>=0.58
+
+# MCAP export for Foxglove visualization (viz.py)
+# Provides the `foxglove` Python module used by this project.
+foxglove-sdk>=0.16.1
+mcap>=1.3.0
