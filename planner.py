@@ -83,7 +83,7 @@ class HybridAStar:
 
             # Check if the goal is reached
             if self.goal_reached(current):
-                print(f"Goal reached after {nodes_expanded} nodes expanded.")
+                #print(f"Goal reached after {nodes_expanded} nodes expanded.")
                 goal_found = True
                 goal_state = current
                 if nodes_expanded >= min_nodes:
@@ -103,7 +103,7 @@ class HybridAStar:
             # Define possible steering angles in degrees
             # Note: The angles are chosen to be symmetric around 0 degrees
             # and cover a reasonable range for steering
-            steering_angles_deg = [-30, -24, -18, -12, -6, 0, 6, 12, 18, 24, 30]
+            steering_angles_deg = [-40, -32, -24, -16, -8, 0, 8, 16, 24, 32, 40]
 
             # Generate successors for forward and reverse directions
             # Note: The direction is 1.0 for forward and -1.0 for reverse
