@@ -56,7 +56,7 @@ class HybridAStar:
         return max(h1, h2)
     
     # Perform the path search using A* algorithm
-    def path_search(self,min_nodes = 100000, max_nodes=350000):
+    def path_search(self,min_nodes = 1000, max_nodes=350000):
         
         # Initialize the search
         # Push the start state onto the open set
