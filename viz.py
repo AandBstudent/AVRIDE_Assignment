@@ -4,6 +4,7 @@ from foxglove.channels import SceneUpdateChannel
 from foxglove import Context
 from foxglove.schemas import SceneUpdate, SceneEntity, CubePrimitive, TriangleListPrimitive, Pose, Vector3, Quaternion, Color, Duration, Point3
 from robot import compute_robot_polygon
+import os
 
 def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name="hybrid_astar_single_tick.mcap"):
     # Visualization of the grid, path, and explored nodes
@@ -41,6 +42,9 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
 
     # MCAP file creation
     # https://docs.foxglove.dev/docs/getting-started/python
+    # check if the file exists and delete it if necessary
+    if os.path.exists(file_name):
+        os.remove(file_name)
 
     with foxglove.open_mcap(file_name) as mcap:
         scene_channel = SceneUpdateChannel("/scene", context=Context().default())
