@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import numba as nb
 
 # Define robot state classes
 class RobotState:
@@ -62,7 +63,7 @@ class RobotModel:
         return (f"RobotModel(length={self.length}, width={self.width}, "
                 f"wheelbase={self.wheelbase}, max_steer_rad={self.max_steer_rad:.3f}, "
                 f"max_curvature={self.max_curvature:.4f})")
-    
+
 def compute_robot_polygon(state: RobotState, model: RobotModel):
     # Returns 4 corners of the robot polygon in world coordinates
     L, W = model.length, model.width
@@ -86,7 +87,6 @@ def compute_robot_polygon(state: RobotState, model: RobotModel):
     # Return the polygon corners in world coordinates
     return body_world
 
-# Function to check collision along an arc from start to end state
 def is_collision_along_arc(start: RobotState, end: RobotState, model: RobotModel, grid):
     # Sample 6 intermediate poses along the arc and check for collisions
     num_samples = 6
@@ -99,7 +99,6 @@ def is_collision_along_arc(start: RobotState, end: RobotState, model: RobotModel
             return True
     return False
 
-# Helper function to check collision at a single robot state
 def _is_collision_single(state: RobotState, model: RobotModel, grid):
     # Check if robot at given state collides with occupied cells in grid
     poly = compute_robot_polygon(state, model)
