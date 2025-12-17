@@ -13,7 +13,7 @@ def load_grid(rows=5, cols=5,num_obstacles=5):
     grid = np.zeros((rows, cols), dtype=int)
 
     # Create more obstacles and place them randomly
-    for _ in range(num_obstacles):
+    for _ in range(num_obstacles+1):
         x, y = np.random.randint(0, 5, 2)
         grid[x, y] = 1  # obstacle
 
@@ -50,7 +50,7 @@ def main():
 
     start_angle = get_goal_direction(x_coord, y_coord, x_coord_goal, y_coord_goal)
 
-    start_state = RobotState(x_coord, y_coord, start_angle, 0)
+    start_state = RobotState(x_coord, y_coord, 0, 0)
     goal_state = RobotState(x_coord_goal, y_coord_goal, 0, 0)
 
     planner = HybridAStar(grid, robot_model, start_state, goal_state)
