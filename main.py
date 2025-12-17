@@ -1,7 +1,6 @@
 import numpy as np
 import argparse
 from robot import RobotModel, RobotState
-from robot import get_goal_direction
 from planner import HybridAStar
 from viz import visualize_and_mcap
 import time
@@ -47,8 +46,6 @@ def main():
     grid, x_coord, y_coord, x_coord_goal, y_coord_goal = load_grid(rows=args.rows,cols=args.cols,num_obstacles=args.num_obs)
     # Robot model
     robot_model = RobotModel()
-
-    start_angle = get_goal_direction(x_coord, y_coord, x_coord_goal, y_coord_goal)
 
     start_state = RobotState(x_coord, y_coord, 0, 0)
     goal_state = RobotState(x_coord_goal, y_coord_goal, 0, 0)
