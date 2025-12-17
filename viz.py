@@ -3,7 +3,7 @@ import foxglove
 from foxglove.channels import SceneUpdateChannel
 from foxglove import Context
 from foxglove.schemas import SceneUpdate, SceneEntity, CubePrimitive, TriangleListPrimitive, Pose, Vector3, Quaternion, Color, Duration, Point3
-from robot import compute_robot_polygon
+from robot import compute_robot_polygon, _is_collision_single
 import os
 
 def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name="hybrid_astar_single_tick.mcap"):
@@ -80,6 +80,21 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
                         color=Color(r=1.0, g=0.2, b=0.2, a=1.0)
                     )]
                 ))
+                # Check for collision
+                if _is_collision_single(state, robot_model, grid):
+                    entities.append(SceneEntity(
+                        id=f"collision_{i}",
+                        frame_id="map",
+                        lifetime=Duration(sec=0, nsec=0),
+                        cubes=[CubePrimitive(
+                            pose=Pose(
+                                position=Vector3(x=state.x, y=state.y, z=1.5),
+                                orientation=Quaternion(w=1)
+                            ),
+                            size=Vector3(x=0.2, y=0.2, z=0.2),
+                            color=Color(r=1.0, g=0.0, b=0.0, a=1.0)
+                        )]
+                    ))
         
         # Start and goal markers
         entities += [
@@ -109,7 +124,9 @@ def visualize_and_mcap(grid, path, explored, robot_model, start, goal, file_name
                 color=Color(r=1.0, g=0.0, b=0.0, a=1.0)
             )]
         )]
-
+                
         scene = SceneUpdate(entities=entities)
         scene_channel.log(scene)
+                
+
     print(f"MCAP file '{file_name}' created successfully.")
