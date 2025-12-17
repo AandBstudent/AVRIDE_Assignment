@@ -120,3 +120,17 @@ def _is_collision_single(state: RobotState, model: RobotModel, grid):
                     i <= max_y and i+1 >= min_y):
                     return True # Collision detected
     return False
+
+def get_goal_direction(start_x, start_y,  goal_x, goal_y):
+    # Calculate the direction vector from start to goal
+    dx = goal_x - start_x
+    dy = goal_y - start_y
+    # Calculate the angle of the direction vector in radians
+    goal_angle_rad = math.atan2(dy, dx)
+    # Convert the angle to degrees
+    goal_angle_deg = math.degrees(goal_angle_rad)
+    # Adjust the goal angle to be within the range [0, 360)
+    goal_angle_deg = (goal_angle_deg + 360) % 360
+    # Calculate the difference between the goal angle and the start yaw
+    angle_diff = (goal_angle_deg + 180) % 360 - 180
+    return angle_diff
